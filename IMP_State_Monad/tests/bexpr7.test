@@ -1,0 +1,5 @@
+x := 2;
+y := 3;
+z := 4;
+if x<=y && x <= z then print 1 else print 2
+

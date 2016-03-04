@@ -1,0 +1,6 @@
+x := 2;
+{ let x = 7 in
+	{ let x = 8 in  print x };
+	print x
+};
+print x

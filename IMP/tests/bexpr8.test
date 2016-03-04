@@ -1,0 +1,4 @@
+ x := 5;
+y:= 9;
+z := 10;
+if x<=1 || x<=z then print 1 else print 2

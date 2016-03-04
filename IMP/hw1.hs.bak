@@ -1,0 +1,84 @@
+module Main(main) where
+    
+    import Lexer
+    import Parser
+    import System.IO
+    import Debug.Trace
+
+    type State = String -> Int
+
+    extend :: State -> String -> Int -> State
+    extend s name value =
+        (\var ->
+             if var == name
+             then
+                 value
+             else s $ var )
+
+    empty :: State
+    empty = (\_ -> 0) 
+
+    evalAexpr :: State-> AExp -> Int
+    evalAexpr _ (Constant c) = c
+    evalAexpr state (Variable name) = state name
+    evalAexpr state (Add e1 e2) = (evalAexpr state e1) + (evalAexpr state e2)
+    evalAexpr state (Minus e1 e2) = (evalAexpr state e1) - (evalAexpr state e2)
+    evalAexpr state (Times e1 e2) = (evalAexpr state e1) * (evalAexpr state e2)
+    evalAexpr state (Paren e) = evalAexpr state e
+    evalAexpr state (Negate e) = -(evalAexpr state e)
+
+    evalBexpr :: State -> BExp -> Bool
+    evalBexpr state Btrue = True
+    evalBexpr state Bfalse = False
+    evalBexpr state (Not bexp) = not (evalBexpr state bexp)
+    evalBexpr state (And bexp1 bexp2) = (evalBexpr state bexp1) && (evalBexpr state bexp2)
+    evalBexpr state (Or bexp1 bexp2) = (evalBexpr state bexp1) || (evalBexpr state bexp2)
+    evalBexpr state (Le aexp1 aexp2) = (evalAexpr state aexp1) <= (evalAexpr state aexp2)
+    evalBexpr state (Eqtest aexp1 aexp2) = (evalAexpr state aexp1) == (evalAexpr state aexp2)
+                          
+
+    eval :: (State,String) -> Parser.Com -> (State,String)
+            
+    eval (state,out) Skip = (state,out)
+
+    eval (state,out) (Print aexpr) =
+         (state, out ++ (show (evalAexpr state aexpr)) ++ " ")
+
+    eval (state,out) (Let var aexpr com) =
+         let oldValue = (state var) in
+         let letState = (extend state var (evalAexpr state aexpr)) in
+         let (newState,newOutput) = (eval (letState,out) com) in
+         ((extend newState var oldValue), newOutput)
+
+    eval (state,out) (Set var aexpr) =
+        ((extend state var (evalAexpr state aexpr)),out)
+
+    eval (state,out) (Seq c1 c2) =
+        eval (eval (state,out) c1) c2
+
+    eval (state,out) (Brace c) =
+        eval (state,out) c
+
+    eval (state,out) (If bexpr cthen celse) =
+        if (evalBexpr state bexpr)
+        then eval (state,out) cthen
+        else eval (state,out) celse
+
+    eval (state,out) w@(While bexpr c) =
+        if (evalBexpr state bexpr)
+        then eval (eval (state,out) c) w
+        else (state,out)
+             
+    run :: Parser.Com -> String
+    run c =
+        case (eval (empty,"") c) of
+          (_, out) -> out
+                      
+    main :: IO()
+    main = do
+      content <- getContents
+      case (runAlex content imp) of
+        Left s -> hPutStrLn stderr s
+        Right c -> putStrLn . run $ c
+
+    
