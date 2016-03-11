@@ -1,3 +1,0 @@
-class Stack a where
-    push :: Stack a -> a -> Stack a
-    pop :: Stack a -> ( a , Stack a)
