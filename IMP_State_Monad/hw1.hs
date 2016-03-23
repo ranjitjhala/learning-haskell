@@ -6,36 +6,32 @@ module Main(main) where
     import Debug.Trace
     import Control.Monad.State
 
-    type Env = (String -> Int, String)
+    type Env = String -> Int
 
-    extend :: String -> Int -> State Env ()
+    extend :: String -> Int -> StateT Env IO ()
     extend name value =
-        state $ \(s,out) -> 
+        state $ \s -> 
                   ((),
-                   ( (\var ->
+                   (\var ->
                        if var == name
                        then value
                        else s $ var
-                     ),out) )
-
-
-    emptyMem :: String -> Int
-    emptyMem _ =  0
+                     ) )
 
     empty :: Env
-    empty = (emptyMem,"")
+    empty = \_ -> 0
 
-    evalBinary :: (Int->Int->Int) -> AExp -> AExp -> State Env Int
+    evalBinary :: (Int->Int->Int) -> AExp -> AExp -> StateT Env IO Int
     evalBinary op e1 e2 = do
                     n1 <- evalAexpr e1
                     n2 <- evalAexpr e2
                     return (op n1 n2)
             
-    evalAexpr :: AExp -> State Env Int
+    evalAexpr :: AExp -> StateT Env IO Int
 
     evalAexpr (Constant c) = return c
                              
-    evalAexpr (Variable name) = state $ \(s,out) -> (s name,(s,out))
+    evalAexpr (Variable name) = state $ \s -> (s name, s)
                                                                   
     evalAexpr (Add e1 e2) = evalBinary (+) e1 e2
 
@@ -49,7 +45,7 @@ module Main(main) where
                     n <- evalAexpr e
                     return (-n)
 
-    evalBexpr :: BExp -> State Env Bool
+    evalBexpr :: BExp -> StateT Env IO Bool
                  
     evalBexpr Btrue = return True
                       
@@ -79,13 +75,13 @@ module Main(main) where
                     n2 <- evalAexpr aexp2
                     return (n1 == n2)
                           
-    eval :: Parser.Com -> State Env ()
+    eval :: Parser.Com -> StateT Env IO ()
             
     eval Skip = return ()
 
     eval (Print aexpr) = do
                     n <- evalAexpr aexpr
-                    state $ \(s,out) -> ((),(s,out ++ (show n) ++ " "))
+                    liftIO . putStr $ (show n) ++ " "
 
     eval (Let var aexpr com) = do
          oldValue <- evalAexpr (Variable var)
@@ -121,9 +117,8 @@ module Main(main) where
              
     run :: Parser.Com -> IO ()
     run c = do
-      --eval empty c
-      let (_,(_,out)) = runState (eval c) empty 
-      putStrLn out
+      runStateT (eval c) empty
+      return ()
                       
     main :: IO()
     main = do
