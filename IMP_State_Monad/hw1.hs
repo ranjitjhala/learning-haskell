@@ -4,81 +4,126 @@ module Main(main) where
     import Parser
     import System.IO
     import Debug.Trace
+    import Control.Monad.State
 
-    type State = String -> Int
+    type Env = (String -> Int, String)
 
-    extend :: State -> String -> Int -> State
-    extend s name value =
-        (\var ->
-             if var == name
-             then
-                 value
-             else s $ var )
+    extend :: String -> Int -> State Env ()
+    extend name value =
+        state $ \(s,out) -> 
+                  ((),
+                   ( (\var ->
+                       if var == name
+                       then value
+                       else s $ var
+                     ),out) )
 
-    empty :: State
-    empty = (\_ -> 0) 
 
-    evalAexpr :: State-> AExp -> Int
-    evalAexpr _ (Constant c) = c
-    evalAexpr state (Variable name) = state name
-    evalAexpr state (Add e1 e2) = (evalAexpr state e1) + (evalAexpr state e2)
-    evalAexpr state (Minus e1 e2) = (evalAexpr state e1) - (evalAexpr state e2)
-    evalAexpr state (Times e1 e2) = (evalAexpr state e1) * (evalAexpr state e2)
-    evalAexpr state (Paren e) = evalAexpr state e
-    evalAexpr state (Negate e) = -(evalAexpr state e)
+    emptyMem :: String -> Int
+    emptyMem _ =  0
 
-    evalBexpr :: State -> BExp -> Bool
-    evalBexpr state Btrue = True
-    evalBexpr state Bfalse = False
-    evalBexpr state (Not bexp) = not (evalBexpr state bexp)
-    evalBexpr state (And bexp1 bexp2) = (evalBexpr state bexp1) && (evalBexpr state bexp2)
-    evalBexpr state (Or bexp1 bexp2) = (evalBexpr state bexp1) || (evalBexpr state bexp2)
-    evalBexpr state (Le aexp1 aexp2) = (evalAexpr state aexp1) <= (evalAexpr state aexp2)
-    evalBexpr state (Eqtest aexp1 aexp2) = (evalAexpr state aexp1) == (evalAexpr state aexp2)
-                          
+    empty :: Env
+    empty = (emptyMem,"")
 
-    eval :: State -> Parser.Com -> IO State
+    evalBinary :: (Int->Int->Int) -> AExp -> AExp -> State Env Int
+    evalBinary op e1 e2 = do
+                    n1 <- evalAexpr e1
+                    n2 <- evalAexpr e2
+                    return (op n1 n2)
             
-    eval state Skip = return state
+    evalAexpr :: AExp -> State Env Int
 
-    eval state (Print aexpr) = do
-                    putStr ((show (evalAexpr state aexpr)) ++ " ")
-                    return state
+    evalAexpr (Constant c) = return c
+                             
+    evalAexpr (Variable name) = state $ \(s,out) -> (s name,(s,out))
+                                                                  
+    evalAexpr (Add e1 e2) = evalBinary (+) e1 e2
 
-    eval state (Let var aexpr com) =
-         let oldValue = (state var) in
-         let letState = (extend state var (evalAexpr state aexpr)) in
-         do
-           newState <- (eval letState com) 
-           return (extend newState var oldValue)
+    evalAexpr (Minus e1 e2) = evalBinary (-) e1 e2
+                              
+    evalAexpr (Times e1 e2) = evalBinary (*) e1 e2
+                                    
+    evalAexpr (Paren e) = evalAexpr e
+                          
+    evalAexpr (Negate e) = do
+                    n <- evalAexpr e
+                    return (-n)
 
-    eval state (Set var aexpr) =
-        return (extend state var (evalAexpr state aexpr))
+    evalBexpr :: BExp -> State Env Bool
+                 
+    evalBexpr Btrue = return True
+                      
+    evalBexpr Bfalse = return False
+                       
+    evalBexpr (Not bexp) = do
+                    b <- evalBexpr bexp
+                    return (not b)
+                 
+    evalBexpr (And bexp1 bexp2) = do
+                    b1 <- evalBexpr bexp1
+                    b2 <- evalBexpr bexp2
+                    return (b1 && b2)               
 
-    eval state (Seq c1 c2) = do
-        state1 <- (eval state c1)
-        eval state1 c2
+    evalBexpr (Or bexp1 bexp2) = do
+                    b1 <- evalBexpr bexp1
+                    b2 <- evalBexpr bexp2
+                    return (b1 || b2)         
+                                       
+    evalBexpr (Le aexp1 aexp2) = do
+                    n1 <- evalAexpr aexp1
+                    n2 <- evalAexpr aexp2
+                    return (n1 <= n2)
 
-    eval state (Brace c) =
-        eval state c
+    evalBexpr (Eqtest aexp1 aexp2) = do
+                    n1 <- evalAexpr aexp1
+                    n2 <- evalAexpr aexp2
+                    return (n1 == n2)
+                          
+    eval :: Parser.Com -> State Env ()
+            
+    eval Skip = return ()
 
-    eval state (If bexpr cthen celse) =
-        if (evalBexpr state bexpr)
-        then eval state cthen
-        else eval state celse
+    eval (Print aexpr) = do
+                    n <- evalAexpr aexpr
+                    state $ \(s,out) -> ((),(s,out ++ (show n) ++ " "))
 
-    eval state w@(While bexpr c) = 
-        if (evalBexpr state bexpr)
-        then
-            do
-              state1 <- eval state c 
-              eval state1 w
-        else return state
+    eval (Let var aexpr com) = do
+         oldValue <- evalAexpr (Variable var)
+         newValue <- evalAexpr aexpr
+         extend var newValue
+         eval com
+         extend var oldValue
+
+    eval (Set var aexpr) = do
+                    n <- evalAexpr aexpr
+                    extend var n
+
+    eval (Seq c1 c2) = do
+        eval c1
+        eval c2
+
+    eval (Brace c) = eval c
+
+    eval (If bexpr cthen celse) = do
+                    b <- evalBexpr bexpr
+                    if (b)
+                    then eval cthen
+                    else eval celse
+
+    eval w@(While bexpr c) = do
+                    b <- evalBexpr bexpr
+                    if (b)
+                    then
+                        do
+                          eval c 
+                          eval w
+                    else return ()
              
     run :: Parser.Com -> IO ()
     run c = do
-      eval empty c
-      return ()
+      --eval empty c
+      let (_,(_,out)) = runState (eval c) empty 
+      putStrLn out
                       
     main :: IO()
     main = do
