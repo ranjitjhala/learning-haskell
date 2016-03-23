@@ -1,4 +1,4 @@
-
+import Data.List
 
 -- instance Functor Maybe where
 --     fmap :: (a -> b) -> (Maybe a) -> (Maybe b)
@@ -32,8 +32,9 @@ main = do
   -- putStrLn $ "Yes, you really said " ++ line' ++ " backwards!" 
 
   -- r -> ?? === (->) r ??
-  instance Functor ((->) r) where
-       -- f :: a-> b
-       -- g :: r-> a
-       -- result :: r -> b
-       fmap f g = (\x -> f (g x))
+  -- instance Functor ((->) r) where
+  --      -- f :: a-> b
+  --      -- g :: r-> a
+  --      -- result :: r -> b
+  --      fmap f g = (\x -> f (g x))
+  -- putStrLn ((fmap (intersperse '-') show) 345)
