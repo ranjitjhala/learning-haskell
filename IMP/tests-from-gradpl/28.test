@@ -1,0 +1,42 @@
+/* Richard Knoll (rbk2kb) */
+
+x := 1;
+
+/* Check x and y going in and out of scope in various configurations */
+print x;
+print y;
+{
+    let x = x + x in
+    y := 1;
+    x := 4;
+    print x;
+    print y;
+    {
+        let x = x * x in
+        print x;
+        print y
+    };
+    print x;
+    print y
+};
+print x;
+print y;
+
+/* Printed because of the lack of a newline */
+{
+    while i <= 68 do
+    {
+        i := i + 1;
+        print 0
+    }
+};
+
+/* A loop with changing state and integer overflow */
+y := x;
+while x - y <= 50 do
+{
+    y := x * x;
+    x := x + x;
+    print x;
+    print y
+}

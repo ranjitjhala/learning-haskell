@@ -1,0 +1,4 @@
+/* this is just "test3" from the makefile */
+/* Kevin Leach -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+let x = 5 in {while i <= x do { let x = 2 in {total := total + (i*i) ; i := i + 1; print x+i }}} ; print total; print x

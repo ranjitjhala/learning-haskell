@@ -1,0 +1,44 @@
+/* SAMYUKTA JADHWANI (sj6re) */ 
+a := 32700; 
+b := 9375;
+/*GCD of 32700 & 9375 -> prints 75 75*/
+{ while !a=b 
+	do{
+		{while !a<=b do{c:=a-b;a:=c}};
+		{while !b<=a do{c:=b-a;b:=c}}
+	}
+};
+
+print a;
+print b;
+
+{ while i <= 10 
+	do{ let x = (i*i)+(10*i)+25 in 
+		{let i = i*i in print i ;
+		print x; 
+		print y; 
+		y := 2* x; 
+		print y; 
+		{if !y<=250 && y<=350 
+			then {m:= 1111; print m} 
+			else{m:= 9999;print m}
+		};
+
+		{if m=0 || m=1111 
+			then {print 2222} 
+			else {print 3333}
+		};
+		x := 100 }; 
+
+		{let x = x+900 in p:=x; 
+		print p; 
+		i := i+1};
+		
+		{let i=i in {while z<=i do{print i; i:=i-1}}}
+	}
+}
+
+/*{if y<=5 then {print 0} else{print 1}}*/
+
+/*{while i <= 5 do { total := total + (i*i) ; i := i + 1 }} ; print total*/
+

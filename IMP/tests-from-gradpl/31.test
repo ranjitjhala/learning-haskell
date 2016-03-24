@@ -1,0 +1,20 @@
+/* this is just "test3" from the makefile */
+/* sh2df-- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+{while i <= 5 do { total := total + (i*i) ; i := i + 1 }} ; print total;
+
+x:= 678; {let x = 33 in print x}; print x;
+
+{while (i+total) <= 100 do { total := total + i; i := i + 1}}; print total; 
+
+/*print out the first 50 Fibonacci number*/
+Fibonacci_0 := 0;
+Fibonacci_1 := 1;
+{
+	while i <= 50 do  {
+		Fibonacci_n := Fibonacci_0 + Fibonacci_1; 
+		print Fibonacci_n; 
+		Fibonacci_0 := Fibonacci_1; 
+		Fibonacci_1 := Fibonacci_n; 
+		i := i + 1}
+}

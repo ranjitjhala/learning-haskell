@@ -1,0 +1,21 @@
+/* this is just "test3" from the makefile */
+/* YOUR NAME HERE -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+/* {let i = 0 in {while i <= 5 do { total := total + (i*i) ; i := i + 1 }}} ; print total */
+x := 27;
+print x;
+while 2 <= x do {
+    y := x;
+    { while 2 <= y do y := y - 2 } ;
+    { if y = 0 then {
+	{ let y = 1 in
+	    { while y * 2 <= x - 1 do y := y+1 };
+	    x := y
+	}
+    }
+	else {
+	    x := 3*x+1
+	}
+    } ;
+    print x
+}

@@ -1,0 +1,38 @@
+/* this is just "test3" from the makefile */
+/* ANISH TONDWALKAR -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+{while i <= 5 do { total := total + (i*i) ; i := i + 1 }} ;
+print total;
+{
+        c := 3-10;
+        let a = 3 in {
+                a := 1+1;
+                let b = 2 in {
+                        let c = 3 in {
+                                print i;
+                                print total ;
+                                print c;
+                                print 100;
+                                if a==3 then print total else print i
+                        } 
+                } 
+        } ;
+print a;
+print c
+};
+print a;
+print b;
+print c;
+print i;
+print (4611686018427387903+2)*10-4611686018427387000-1000;
+x := 1 ;
+y := 2 ;
+{ let x = 3 in
+  print x ;
+    print y ;
+      x := 4 ;
+        y := 5
+} ;
+print x ;
+print y
+

@@ -1,0 +1,11 @@
+/* Zack Verham (zdv8rb) -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+/* solution: 25 125 0 5 4 */
+x := 1 ;
+i := 5 ; 
+{let i = (i * 5) in {
+	let j = (i * 5) in {
+		print i; print j; x := (x + 3)
+	}}; print j
+};
+print i; print x

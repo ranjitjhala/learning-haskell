@@ -1,0 +1,12 @@
+/* this is no longer "test3" from the makefile */
+/* Hao Bai(hb4vf) -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+x := 10;
+{let x = 15 in 
+if x <= 10 || false
+then print 5 * x
+else print 6 * x};
+while !x <= 1 && true do
+  skip;
+  print x + 7;
+  x := x - 1

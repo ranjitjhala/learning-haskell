@@ -1,0 +1,5 @@
+/* Rolph Recto (rjr7je) -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it 
+   correct output: 441834721653271265392489634813711196 */
+
+x := 3; while i <= 5 do { {let x = x + 15 in { { let x = x + 25 in if !x=0 && !x=15 then print 1+x else print x }; print x } }; print x; i := i + 1; x := x * 2 }.

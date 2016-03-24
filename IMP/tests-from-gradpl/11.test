@@ -1,0 +1,3 @@
+/* Derek Morris (dem7yw) -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+foo := 1; bar := 2; foobar := foo + bar; total := 0;{ while foobar <= 37 do { foo := bar + 1; bar := foo + 2; total := total + foo + bar; foobar := foobar + 1 } }; print total

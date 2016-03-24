@@ -1,0 +1,11 @@
+/* aml3sc */
+{ let x = 4 in
+   { let y = 3 in
+   x := 5;
+   print x ;
+   print y 
+   };
+   y := 6
+};
+print x ;
+print y

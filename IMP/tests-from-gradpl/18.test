@@ -1,0 +1,19 @@
+/* James Roberts */ 
+x := 100 ;
+x := 2 ;
+y := 10 ;
+{ let y = 11 in
+  y := 17 ;
+  { while x <= y do {
+      let x = 3 - y in
+      print y ;
+      print x ;
+      x := 9 ;
+      y := y - 2
+      } ;
+    print x
+  } ;
+  print x
+} ;
+print x ;
+print y 

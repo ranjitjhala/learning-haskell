@@ -1,0 +1,13 @@
+/* Arjun Shankar (as3kc)*/ 
+total := 1;
+test := 10;
+{while i <= 5 do { localScope := 20; test := 30; total := total + (i*i) ; i := i + 1 }} ;
+print total;
+print test;
+print localScope;
+{if test = 10 then print 10 else print 11};
+{if test = test then print 10 else print 11};
+{while false do print 1};
+test := 1;
+test := 2;
+print test

@@ -1,0 +1,27 @@
+/* Matt Pearson-Beck */ 
+x := 1 ;          /* x = 1 */
+y := x ;          /* x = 1, y = 1 */
+x := 2 ;          /* x = 2, y = 1 */
+x := 3 ;          /* x = 3, y = 1 */
+y := x ;          /* x = 3, y = 3 */
+x := 1 ;          /* x = 1, y = 3 */
+{ let x = 5 in    /* x = 5, y = 3 */
+  let y = 6 in    /* x = 5, y = 6 */
+  print y ;	      /* "6" */
+  print y ;       /* "6" */
+  { 
+    let x = 10 in /* x = 10, y = 6 */
+    print x       /* "10" */
+  } ;             /* x = 5, y = 6 */
+  print y ;       /* "6" */
+  print x ;       /* "5" */
+  let y = 11 in   /* x = 5, y = 11 */
+  print x ;       /* "5" */
+  print y ;       /* "11" */
+  x := y + x ;    /* x = 16, y = 11 */
+  y := x * x ;    /* x = 16, y = 256 */
+  print x ;       /* "16" */
+  print y         /* "256" */
+} ;
+print x ;         /* "1" */
+print y           /* "3" */

@@ -1,0 +1,23 @@
+x := 1 ;
+y := 2 ;
+{
+	{ let x = 3 in
+		print x ;
+		print y ;
+		x := 4 ;
+		y := 5
+	} ;
+	print x ;
+	x := 7 ;
+	print y ;
+	{ let y = 4 in
+			print x ;
+			print y ;
+			y := 2 ;
+			z := 3 
+	}
+} ;
+print x ;
+print y ;
+print z 
+.

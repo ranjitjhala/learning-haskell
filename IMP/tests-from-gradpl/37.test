@@ -1,0 +1,6 @@
+/* this is just "test3" from the makefile */
+/* Yuchi Tian -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+/* Yuchi Tian yt8mn@virginia.edu */
+(* 012111232223433345444565556766 *)
+{while i <= 5 do { print i; {let i = i + 1 in print i;{ let i = i+ 1 in print i };print i}; i := i + 1; print i }}

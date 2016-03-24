@@ -1,0 +1,9 @@
+/* this is just "test3" from the makefile */
+/* jf5rb-Jinlong Feng -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+
+print 1 + 2;
+print x ; x := 3 ; print x ; x := 4 ; print x;
+{while i <= 5 do { total := total + (i*i) ; i := i + 1 }} ;{let total = 99999 in print total}; print total;
+x := 678 ; { let x = 33 in print x } ; print x;
+print 1+(2+3)

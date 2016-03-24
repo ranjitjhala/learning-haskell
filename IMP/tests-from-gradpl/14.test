@@ -1,0 +1,3 @@
+/* James Sun -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+a:=1;b:=1;{while i <=5 do {c:=a+b;print c;a:=b+c;print a;b:=a+c;print b;i:=i+1}}

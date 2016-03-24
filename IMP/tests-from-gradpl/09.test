@@ -1,0 +1,8 @@
+/* this is just "test3" from the makefile */
+/* Chris Earman -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+x := 1 ; y := 2 ; { let x = 3 in print x ; print y ; x := 4 ; y := x ; { let x = (1 + 2) * y in print x ; print y ; while 0 = i do { y := i ; i := 1}} ; print x ; print y } ; print x ; print y.
+
+x := 1 ; y := 2 ; { let x = 3 in print x ; print y ; x := 4 ; y := 5 } ; print x ; print y.
+
+{while i <= 5 do { total := total + (i*i) ; i := i + 1 }} ; print total.

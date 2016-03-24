@@ -1,0 +1,3 @@
+/* this is just "test3" from the makefile */
+/* Wil Thomason, wbt9mh */ 
+x := 1; y := 2; print x; print y; { let x = 3 in print x; print y; { let y = 7 in x := 4; print x; print y; y := 5; print y }; print x; print y }; print x; print y

@@ -1,0 +1,5 @@
+/* Alex Thomas (apt9jf) */ 
+/* Note that printing y should help denote the value of the "true counter" -> aka the top-level x */
+x := 10;
+{while !x <= 4 do { {let x = x * 2 in { print x; let x = x - 1 in print x }}; x := x - 1; print y; print x}};
+print x

@@ -1,0 +1,5 @@
+/* this is just "test3" from the makefile */
+/* Casey Huang -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+{let i = 3 + 3 in let i = i + 1 in print i}
+

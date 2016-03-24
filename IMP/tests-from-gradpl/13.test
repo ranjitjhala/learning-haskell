@@ -1,0 +1,4 @@
+/* this is just "test3" from the makefile */
+/*Haina Li
+hl3wb*/ 
+{while i <= 4 do {total := total + i; i := i + 1; x := 10 ; { let x = 100 + i in print x; print i } ; print x }}; print total 

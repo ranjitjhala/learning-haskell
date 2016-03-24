@@ -1,0 +1,11 @@
+/* this is just "test3" from the makefile */
+/* Akshay Joshi
+   asj5b */ 
+x := 13 ; y := 1 ; i := 4 ;
+{let x = 5 in print x ; {let y = 7 in { if (x) <= 6 then { let x = (y+4) in print x } else { let y = x in  print y }}} ; print x } ; 
+print x ; print y ; 
+{let i = 7 in {while i <= 11 do { i := i + 1 ; print i ; x := x + 7}} ; print i } ; 
+print i ; 
+print x ;  
+{let x = 5 in print x ; {let x = 7 in { if x <= 6 then { print y } else { print x }}} ; print x } ; 
+{ if !x == (y + 46) || y <= (1-x) && i <= (x + y) then print x else print y }  

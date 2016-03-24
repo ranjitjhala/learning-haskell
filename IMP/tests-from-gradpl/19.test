@@ -1,0 +1,31 @@
+/* Jacob Steele (jss2zb) -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+let x = 2 in
+{
+while !i == 5 && total<=0 do 
+{
+let x = 5 in 
+let y = 2 in
+if x<=y  then 
+{
+   if x == y then
+   {
+   x:= x+1;
+   print y+x*3
+   }
+   else
+   {
+   print t
+   };
+   print x + y 
+}
+else
+{ 
+   print x*y;
+   total := 20
+}
+}} 
+; 
+print total;
+print x
+

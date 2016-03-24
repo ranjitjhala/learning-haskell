@@ -1,0 +1,5 @@
+/* this is just "test3" from the makefile */
+/* Kevin Liu (kl4bx)
+	Should increment and print X and Y all the way up to 6 and 7 respectively. Then it should exit 
+	the let expression and print out 1 and 2.*/ 
+X := 1; Y:= 2; {let X = 1 in let Y = 2 in {while X <= 5 do X := X + 1; Y := Y + 1; print X; print Y}}; print X; print Y

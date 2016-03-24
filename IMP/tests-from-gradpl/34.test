@@ -1,0 +1,8 @@
+/* Sarun Paisarnsrisomsuk 
+* The answer should be 1845
+*/ 
+x:=5;{while x<=15 do {{let x = 11 in let y = y+1 in {while x<=15 do {total:=total+x+y+z;x:=x+1;y:=y+2;z:=z+3}}};x:=x+2}};print total
+
+
+
+

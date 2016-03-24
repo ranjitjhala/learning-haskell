@@ -1,0 +1,10 @@
+/* Ben Lowman (brl2xx) */ 
+
+x := 1;
+{ let x = 3 in
+  x := x;
+  print x;
+  y := 1
+};
+print x;
+print y

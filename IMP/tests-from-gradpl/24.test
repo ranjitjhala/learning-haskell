@@ -1,0 +1,3 @@
+/* Matthew Irvine (mji7wb) */
+/* Test should print 1 4 3 3 3 3 2 1 2 */
+a := 1; b := 2; {let a = 3 in {let b = a in {let a = b + 1 in {let c = 1 in print c}; print a; print b}; print a; print b}; print a; print b}; print a; print b

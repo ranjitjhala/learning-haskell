@@ -1,0 +1,21 @@
+/* Jeff Principe (jwp3ce) */
+{
+	while x <= 5 do 
+		x := x + 1;
+		{let x = x + 5 in
+			if x <= 8 then 
+				{let y = 3 in
+					x := x - 11;
+					print x;
+					print y;
+					y := y + x;
+					print y
+				};
+				print y
+			else print y
+		};
+		print x;
+		print y
+};
+print x;
+print y

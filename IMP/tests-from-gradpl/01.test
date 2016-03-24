@@ -1,0 +1,4 @@
+/* this is just "test3" from the makefile */
+/* Ana Nora Evans -- put your name in a comment so that if this file
+   gets mixed up I can still give you credit for it */ 
+x := 678 ; y := 1; { let x = 33 in { print x; print y; {let y = 44 in print x; print y}; print x; print y } } ; print x; print y

@@ -1,0 +1,9 @@
+
+/* Jamie Floyd */
+
+{x:=0};
+/* testing while, let, set */
+/* if scope of let is off, may loop forever.. */
+{while x <= 10 do { {let x = 5 in y:=x} ; x := x + 1 }};
+/* testing if, EQ, And, Not, print */
+{if y==5 /\ ! false then print 0 else print 1}
