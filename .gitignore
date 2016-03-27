@@ -1,3 +1,5 @@
 *.o
 *~
 *.hi
+solver/parser.hs
+solver/lexer.hs
