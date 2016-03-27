@@ -25,9 +25,11 @@ empty = do
 
 replaceTop:: Show a => (a -> a -> a) -> State (Stack a) (Maybe a)
 replaceTop op = do
-    x1 <- pop
-    x2 <- pop
-    case (x1,x2) of
+  Debug.Trace.trace ("Will pop \n")
+  x2 <- pop
+  Debug.Trace.trace ("Will pop \n")  
+  x1 <- pop
+  case (x1,x2) of
       (Just n1, Just n2) ->
           push (op n1 n2)
       (_,_) -> return Nothing
@@ -44,6 +46,7 @@ evalExpr (elt:rest) =
             "+" -> replaceTop (+)
             "-" -> replaceTop (-)
             _ -> let x = (read elt)::Int in
+                 Debug.Trace.trace ("Will push " ++ (show x) ++ "\n")
                  push x
       case rest of
         [] -> return result
@@ -52,8 +55,8 @@ evalExpr (elt:rest) =
 main :: IO()
 
 main = do
-  let (result,stack) = runState (evalExpr (words "10 4 3 + 2 * -")) []
-  --let (result,stack) = runState (evalExpr (words "10 4 +")) []
+  --let (result,stack) = runState (evalExpr (words "10 4 3 + 2 * -")) []
+  let (result,stack) = runState (evalExpr (words "10 4 +")) []
   case result of
     Just y -> putStrLn $ show y
     Nothing -> putStrLn "Nothing"
