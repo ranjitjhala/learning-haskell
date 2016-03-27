@@ -2,4 +2,4 @@
 *~
 *.hi
 solver/parser.hs
-solver/lexer.hs
+solver/lex.hs

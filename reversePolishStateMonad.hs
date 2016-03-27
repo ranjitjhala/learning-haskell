@@ -25,9 +25,9 @@ empty = do
 
 replaceTop:: Show a => (a -> a -> a) -> State (Stack a) (Maybe a)
 replaceTop op = do
-  Debug.Trace.trace ("Will pop \n")
+--  Debug.Trace.trace ("Will pop \n")
   x2 <- pop
-  Debug.Trace.trace ("Will pop \n")  
+--  Debug.Trace.trace ("Will pop \n")  
   x1 <- pop
   case (x1,x2) of
       (Just n1, Just n2) ->
