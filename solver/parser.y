@@ -82,7 +82,7 @@ Anum '<=' Anum {Arithmetic (Le $1 $3)}
 
 Anum:
 float  {Constant $1}
-| var {Variable $1}
+| var {Arithmetic_Variable $1}
 | Anum '+' Anum {Add $1 $3}
 | Anum '-' Anum {Minus $1 $3}
 | Anum '*' Anum {Times $1 $3}
@@ -96,7 +96,7 @@ data Exp =
   Or Exp Exp |
   Implies Exp Exp |
   Iff Exp Exp | 
-  Not BExp |
+  Not Exp |
   Arithmetic AExp
 
 data AExp =
@@ -106,10 +106,10 @@ data AExp =
 
 data Anum = 
   Constant Float |
-  Variable String |
-  Add AExp AExp |
-  Minus AExp AExp |
-  Times AExp AExp | 
+  Arithmetic_Variable String |
+  Add Anum Anum |
+  Minus Anum Anum |
+  Times Anum Anum 
 
 lexwrap :: (Token -> Alex a) -> Alex a
 lexwrap = (alexMonadScan >>=)
