@@ -13,6 +13,8 @@ parser: lex.hs parser.y
 SOLVER_SRCS = \
 	hw2.hs \
 	lex.hs \
+	exp.hs \
+	cnf.hs \
 	parser.hs
 
 compile: $(SOLVER_SRCS)

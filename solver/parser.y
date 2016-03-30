@@ -1,6 +1,7 @@
 {
 module Parser where
 import Lexer
+import Exp
 }
 
 %name solver
@@ -82,34 +83,14 @@ Anum '<=' Anum {Arithmetic (Le $1 $3)}
 
 Anum:
 float  {Constant $1}
-| var {Arithmetic_Variable $1}
+| var {ArithmeticVariable $1}
 | Anum '+' Anum {Add $1 $3}
 | Anum '-' Anum {Minus $1 $3}
 | Anum '*' Anum {Times $1 $3}
-| '(' Anum ')' {$2} -- reduce/reduce conflict
+-- TODO
+--| '(' Anum ')' {$2} -- reduce/reduce conflict
 
 {
-
-data Exp =
-  Variable String |
-  And Exp Exp |
-  Or Exp Exp |
-  Implies Exp Exp |
-  Iff Exp Exp | 
-  Not Exp |
-  Arithmetic AExp
-
-data AExp =
-  Le Anum Anum |
-  Ge Anum Anum |
-  Eq Anum Anum
-
-data Anum = 
-  Constant Float |
-  Arithmetic_Variable String |
-  Add Anum Anum |
-  Minus Anum Anum |
-  Times Anum Anum 
 
 lexwrap :: (Token -> Alex a) -> Alex a
 lexwrap = (alexMonadScan >>=)

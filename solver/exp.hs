@@ -1,4 +1,7 @@
-module Exp where
+module Exp (Exp(..),
+            AExp(..),
+            Anum(..),
+            convertToConjuctiveNormalForm) where
 
     import Control.Monad.Fix
 
@@ -10,11 +13,13 @@ module Exp where
         Iff Exp Exp | 
         Not Exp |
         Arithmetic AExp
+        deriving (Eq)
 
     data AExp =
         Le Anum Anum |
         Ge Anum Anum |
         Eq Anum Anum
+        deriving (Eq)
 
     data Anum = 
         Constant Float |
@@ -22,7 +27,8 @@ module Exp where
         Add Anum Anum |
         Minus Anum Anum |
         Times Anum Anum 
-
+        deriving (Eq)
+                                  
     eliminateIffAndImplies :: Exp -> Exp
     eliminateIffAndImplies (Iff a b) =
         let a1 = (eliminateIffAndImplies a) in
@@ -40,7 +46,8 @@ module Exp where
     eliminateIffAndImplies (Implies a b) =
         Or (Not (eliminateIffAndImplies a)) (eliminateIffAndImplies b)
     eliminateIffAndImplies e@(Arithmetic _) = e 
-                               
+
+    -- assumes no => or <=> in the expression
     applyDeMorgan :: Exp -> Exp
     applyDeMorgan e@(Variable var) = e
     applyDeMorgan (And a b) = And (applyDeMorgan a) (applyDeMorgan b)
@@ -50,10 +57,14 @@ module Exp where
           Or a b -> And (Not (applyDeMorgan a)) (Not (applyDeMorgan b))
           And a b -> Or (Not (applyDeMorgan a)) (Not (applyDeMorgan b))
           e -> Not (applyDeMorgan e)
-    applyDeMorgan e@(Arithmetic a) = e
+    applyDeMorgan e@(Arithmetic _) = e
     applyDeMorgan (Implies _ _ ) = undefined
     applyDeMorgan (Iff _ _) = undefined
 
+    -- assumes no => or <=> in the expression
+    -- assumes negations olny in front of literals or
+    -- other negations (i.e. we eliminated iff and implies
+    -- and we applied DeMorgan laws)
     eliminateDoubleNegation :: Exp -> Exp
     eliminateDoubleNegation e@(Variable _) = e
     eliminateDoubleNegation (And a b) = And (eliminateDoubleNegation a) (eliminateDoubleNegation b)
@@ -65,6 +76,7 @@ module Exp where
                                         _ -> Not (eliminateDoubleNegation e)
     eliminateDoubleNegation e@(Arithmetic _) = e
 
+    
     eliminateConjInDisj :: Exp -> Exp
     eliminateConjInDisj e@(Variable _) = e
     eliminateConjInDisj (And e1 e2) = And (eliminateConjInDisj e1) (eliminateConjInDisj e2)
@@ -88,14 +100,14 @@ module Exp where
     fixed f e = let e1 = f e in
                 if e1 == e then e1
                 else fixed f e1
-        
-    convertToCnf :: Exp -> Exp
-    convertToCnf e =
+
+    --expression to Conjuctive Normal Form
+    convertToConjuctiveNormalForm :: Exp -> Exp
+    convertToConjuctiveNormalForm e =
         let e1 = eliminateIffAndImplies e in
         let e2 = fixed applyDeMorgan e1 in
         let e3 = fixed eliminateDoubleNegation e2 in
         fixed eliminateConjInDisj e3
-                 
 
     instance Show(Exp) where
            show (Variable var) = var
@@ -128,25 +140,3 @@ module Exp where
                                     ++ (show anum2) ++ ")"
            show (Times anum1 anum2) = "(" ++ (show anum1) ++ ")*("
                                     ++ (show anum2) ++ ")"
-
-    instance Eq(Exp) where
-           (==) (Variable v1) (Variable v2) = v1==v2
-           (==) (And e1 e2) (And e1' e2')= e1==e1' && e2==e2'
-           (==) (Or e1 e2) (Or e1' e2')= e1==e1' && e2==e2'
-           (==) (Implies e1 e2) (Implies e1' e2')= e1==e1' && e2==e2'
-           (==) (Iff e1 e2) (Iff e1' e2')= e1==e1' && e2==e2'
-           (==) (Not e1) (Not e1')= e1==e1'
-           (==) (Arithmetic e1) (Arithmetic e1')= e1==e1'
-           (==) _ _ = False
-
-    instance Eq(AExp) where
-           (==) (Le a1 a2) (Le a1' a2') = a1==a1' && a2==a2'
-           (==) (Ge a1 a2) (Ge a1' a2') = a1==a1' && a2==a2'
-           (==) (Eq a1 a2) (Eq a1' a2') = a1==a1' && a2==a2'
-
-    instance Eq(Anum) where
-           (==) (Constant c1) (Constant c2) = c1==c2
-           (==) (ArithmeticVariable v1) (ArithmeticVariable v2) = v1==v2
-           (==) (Add a1 a2) (Add a1' a2') = a1==a1' && a2==a2'
-           (==) (Minus a1 a2) (Minus a1' a2') = a1==a1' && a2==a2'
-           (==) (Times a1 a2) (Times a1' a2') = a1==a1' && a2==a2'
