@@ -3,14 +3,15 @@ module Main(main) where
     import Lexer
     import Parser
     import Exp
+    import CNF
     import System.IO
     import Debug.Trace
     import Control.Monad.State
 
              
-    run :: Exp -> Exp
+    run :: Exp -> Cnf
     run e = do
-      convertToConjuctiveNormalForm e
+      CNF.convertToConjuctiveNormalForm e
                       
     main :: IO()
     main = do
