@@ -1,0 +1,109 @@
+============================================================================
+H1:((p/\q)->r)
+H2:(q->p)
+H3:q
+Goal:r
+ImplElim "H3" "H2" "H4"
+AndIntro "H4" "H3" "H5"
+ImplElim "H5" "H1" "H6"
+CORRECT proof
+H1:((p/\q)->r)
+H2:(q->p)
+H3:q
+H4:p
+H5:(p/\q)
+H6:r
+============================================================================
+Goal:((p->(q->r))->((p->q)->(p->r)))
+ModusPonens "H1"
+ModusPonens "H2"
+ModusPonens "H3"
+ImplElim "H3" "H2" "H4"
+ImplElim "H3" "H1" "H5"
+ImplElim "H4" "H5" "H6"
+CORRECT proof
+H1:(p->(q->r))
+H2:(p->q)
+H3:p
+H4:q
+H5:(q->r)
+H6:r
+============================================================================
+Goal:(((p->q)/\(q->r))->(p->r))
+ModusPonens "H1"
+ModusPonens "H2"
+AndElimLeft "H1" "H3"
+AndElimRight "H1" "H4"
+ImplElim "H2" "H4" "H5"
+ImplElim "H5" "H3" "H6"
+CORRECT proof
+H1:((p->q)/\(q->r))
+H2:p
+H3:(q->r)
+H4:(p->q)
+H5:q
+H6:r
+============================================================================
+Goal:(((p->q)/\((r->s)/\(p\/r)))->(q\/s))
+ModusPonens "H1"
+AndElimLeft "H1" "H2"
+AndElimRight "H1" "H3"
+AndElimLeft "H2" "H4"
+AndElimRight "H2" "H5"
+Starting subproof with goal:(p->(q\/s))
+ModusPonens "H7"
+ImplElim "H7" "H3" "H8"
+OrIntroLeft "H8" s "H9"
+Subproof ended
+Starting subproof with goal:(r->(q\/s))
+ModusPonens "H10"
+ImplElim "H10" "H5" "H11"
+OrIntroRight "H11" q "H14"
+Subproof ended
+OrElim "H4" "H6" "H12" "H13"
+CORRECT proof
+H1:((p->q)/\((r->s)/\(p\/r)))
+H2:((r->s)/\(p\/r))
+H3:(p->q)
+H4:(p\/r)
+H5:(r->s)
+H6:(p->(q\/s))
+H12:(r->(q\/s))
+H13:(q\/s)
+============================================================================
+Goal:(((p->q)/\((r->s)/\(~q\/~s)))->(~p\/~r))
+ModusPonens "H1"
+AndElimRight "H1" "H2"
+AndElimLeft "H1" "H3"
+AndElimRight "H3" "H4"
+AndElimLeft "H3" "H5"
+Starting subproof with goal:(~q->~p)
+ModusPonens "H7"
+NegIntro "H7" "H2" "H8"
+Subproof ended
+Starting subproof with goal:(~s->~r)
+ModusPonens "H9"
+NegIntro "H9" "H4" "H10"
+Subproof ended
+Starting subproof with goal:(~q->(~p\/~r))
+ModusPonens "H12"
+ImplElim "H12" "H6" "H13"
+OrIntroLeft "H13" ~r "H20"
+Subproof ended
+Starting subproof with goal:(~s->(~p\/~r))
+ModusPonens "H15"
+ImplElim "H15" "H11" "H16"
+OrIntroRight "H16" ~p "H17"
+Subproof ended
+OrElim "H5" "H14" "H18" "H19"
+CORRECT proof
+H1:((p->q)/\((r->s)/\(~q\/~s)))
+H2:(p->q)
+H3:((r->s)/\(~q\/~s))
+H4:(r->s)
+H5:(~q\/~s)
+H6:(~q->~p)
+H11:(~s->~r)
+H14:(~q->(~p\/~r))
+H18:(~s->(~p\/~r))
+H19:(~p\/~r)
