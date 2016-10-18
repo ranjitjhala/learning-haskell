@@ -3,5 +3,5 @@
 *.hi
 solver/parser.hs
 solver/lex.hs
-*/.liquid
-*/.stack-work
+*/.liquid/*
+*/.stack-work/*
