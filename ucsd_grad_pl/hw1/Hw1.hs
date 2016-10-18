@@ -47,15 +47,21 @@ type Vertex = (Float, Float)
 --    built with the Polygon constructor.
 
 rectangle :: Side -> Side -> Shape
-rectangle = error "Define me!"
+rectangle x y = Rectangle x y
 
 rtTriangle :: Side -> Side -> Shape
-rtTriangle = error "Define me!"
+rtTriangle x y = RtTriangle x y
 
 -- 2. Define a function
 
 sides :: Shape -> Int
-sides = error "Define me!"
+sides (Rectangle _ _) = 4
+sides (Ellipse _ _) = 42
+sides (RtTriangle _ _) = 3
+sides (Polygon x)
+  | n <= 2 = 0
+  | otherwise = n
+  where n = (length x)
 
 --   which returns the number of sides a given shape has.
 --   For the purposes of this exercise, an ellipse has 42 sides,
@@ -64,7 +70,10 @@ sides = error "Define me!"
 -- 3. Define a function
 
 bigger :: Shape -> Float -> Shape
-bigger = error "Define me!"
+bigger (Rectangle s1 s2) e = Rectangle (sqrt e)*s1 (sqrt e)*s2
+bigger (Ellipse r1 r2) e = Ellipse (sqrt e)*r1 (sqrt e)*r2
+bigger (RtTriangle s1 s2) e = RtTriangle (sqrt e)*s1 (sqrt e)*s2
+bigger (Polygon 
 
 --   that takes a shape `s` and expansion factor `e` and returns
 --   a shape which is the same as (i.e., similar to in the geometric sense)
