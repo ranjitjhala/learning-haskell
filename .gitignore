@@ -3,3 +3,4 @@
 *.hi
 solver/parser.hs
 solver/lex.hs
+.liquid
