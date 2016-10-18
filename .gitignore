@@ -4,3 +4,4 @@
 solver/parser.hs
 solver/lex.hs
 .liquid
+.stack-work
