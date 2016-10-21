@@ -9,21 +9,6 @@ import Data.Vector
 {-@ pTrue :: TRUE @-}
 pTrue = True
 
---{-@ invalid :: TRUE @-}
--- invalid = False
---  Error: Liquid Type Mismatch
- 
---  14 | invalid = False
---       ^^^^^^^
- 
---    Inferred type
---      VV : {VV : Bool | not (Prop VV)
---                        && VV == GHC.Types.False}
-  
---    not a subtype of Required type
---      VV : {VV : Bool | Prop VV}
-
-
 -- Exercise
 --{-@ ex5 :: Bool -> Bool -> TRUE @-}
 --ex5 a b = a ==> a||b
@@ -43,20 +28,6 @@ pTrue = True
 -- {-@ type Zero = {v:Int | v = 0} @-}
 -- {-@ zero :: Zero @-}
 -- zero = 0
-
-------------------------------------------------------------------
-
-{-@ average :: { v : [Int] | len v > 0 } -> Int @-}
-average :: [Int] -> Int
-average xs = Prelude.sum xs `div` Prelude.length xs
-
-
--- TODO
--- Want to specify a postcondition, but don't know yet how
--- {-@ buildList :: b:Bool -> { xs : [Int] | !b <=> len xs > 0 } @-}  
--- buildList :: Bool -> [Int]
--- buildList True = []
--- buildList False = [1,2,3]
 
 ------------------------------------------------------------------
 
@@ -97,31 +68,9 @@ yes = lAssert (1 + 1 == 2) ()
 -- unsafeLookup index vec = vec ! index
 
 ------------------------------------------------------------------
--- TODO Talk to Wes
--- {-@ abs1 :: Int -> Nat @-}
--- abs1 :: Int -> Int
--- abs1 n 
---   | 0 < n = n
---   | otherwise = -n
 
--- {-@ plus :: Nat -> Nat -> Nat @-}
--- plus::Int->Int->Int
--- plus x y = x+y
-    
--- {-@ absoluteSum :: Vector Int -> Nat @-}
--- absoluteSum vec = absoluteSumRec vec 0 0
--- {-@ absoluteSumRec :: Vector Int -> Nat -> Nat -> Nat  @-}
--- absoluteSumRec vec acc index
---   | index < sz =
---       let elt = vec ! index in
---         let absElt = abs1 elt in
---           let newAcc = plus acc absElt in
---             let newIndex = plus index 1 in
---               absoluteSumRec vec newAcc newIndex
---   | otherwise =  acc
---   where
---     sz = Data.Vector.length vec
-
+-- This code is from the tutorial but it doesn't compile
+-- TODO check with Wes
 loop :: Int -> Int -> a -> (Int -> a -> a) -> a
 loop lo hi base f = go base lo
   where
@@ -135,9 +84,3 @@ vectorSum vec = loop 0 n 0 f
     f i acc = acc + (vec!i)
     n = Data.Vector.length vec
 
-main :: IO ()
-main = do
-  putStrLn $ show $ average [1,2,3]
-  --putStrLn $ show $ average []
-  --putStrLn $ show $ average $ buildList False
-  --putStrLn $ show $ average $ buildList True
