@@ -236,6 +236,161 @@ checkProof (Proof hypList goal (rule:rulesList)) = do
     Nothing -> return Nothing
     Just p -> checkProof p
 
+--------------------------------------------------------------------
+-- end of proof checking
+--------------------------------------------------------------------
+
+buildHypotheses :: [Exp] -> [Hypothesis]
+buildHypotheses exprs =
+  let (_,l) = foldl (\(counter,acc) exp ->
+                       (counter+1,(Hypothesis ("H"++(show counter)) exp):acc)) (0,[]) exprs in l
+
+getHypothesisName::[Hypothesis] -> Exp -> Maybe String
+getHypothesisName hypotheses exp =
+  case find (\(Hypothesis name e)-> e==exp) hypotheses of
+    Just (Hypothesis name _) -> Just name
+    Nothing -> Nothing
+
+generateProof :: [Hypothesis] -> Exp -> Maybe [Rule]
+generateProof hypotheses goal =
+  case generateProof1 hypotheses goal of
+    Nothing -> Nothing
+    Just (Proof _ _ rules) -> Just rules
+
+generateProof1 :: [Hypothesis] -> Exp -> Maybe Proof
+generateProof1 hypotheses goal =
+  case find (\(Hypothesis name exp)-> exp==goal) hypotheses of
+    Just _ -> Just (Proof hypotheses goal [])
+    Nothing -> step hypotheses goal
+
+    
+step::[Hypothesis] -> Exp -> Maybe Proof
+step hypotheses goal@(And p q) =
+  -- check if last rule can be andIntro
+  case generateProof1 hypotheses p of
+    Nothing -> Nothing
+    Just (Proof hyp1 _ rules1) ->
+      case generateProof1 hyp1 q of
+        Nothing -> Nothing
+        Just (Proof hyp2 _ rules2) -> 
+          -- add rule for AddIntro
+          case (getHypothesisName hyp2 p,getHypothesisName hyp2 q) of
+            (Just hypStr1, Just hypStr2) ->
+              let conclStr = "H"++(show $ (length hyp2)) in
+              let newHypList = hyp2 ++ [Hypothesis conclStr goal] in
+              let newRules = rules1++rules2++[AndIntro hypStr1 hypStr2 conclStr] in
+                Just (Proof newHypList goal newRules)
+                      
+            (_,_) -> Nothing
+  -- TODO handle other cases here when the goal is a conjuction
+
+step hypotheses goal@(Var name) =
+  let pHyp = filter (\(Hypothesis _ expr) ->
+                        contains expr goal) hypotheses in
+    case find (\h -> isNotProcessedHyp hypotheses h) pHyp of
+      Nothing -> Nothing
+      Just (Hypothesis hName (And p q)) ->
+        let pName =  "H"++(show $ (length hypotheses)) in
+        let qName =  "H"++(show $ (length hypotheses) + 1) in
+        -- create hyp p
+        -- create hyp q
+        -- add AndElimRight && AndElimLeft
+        -- try again to generate proof with same goal
+          case (generateProof1 (hypotheses++[(Hypothesis pName p),(Hypothesis qName q)]) goal) of
+            Nothing -> Nothing
+            Just (Proof newHyp _ newRules) -> Just (Proof newHyp goal
+                                                    ([AndElimRight hName pName,
+                                                      AndElimLeft hName qName]
+                                                      ++newRules))
+      Just (Hypothesis hName (Implies p q)) ->
+        case (generateProof1 hypotheses p) of
+          Nothing -> Nothing
+          Just (Proof pHypList _ pRules) ->
+            case (getHypothesisName pHypList p) of
+              Nothing -> Nothing -- This should not happen TODO Add some error
+              Just pName ->
+                let qName =  "H"++(show $ (length pHypList)) in
+                  case (generateProof1 (pHypList++[Hypothesis qName q]) goal) of
+                    Nothing -> Nothing
+                    Just (Proof qHypList _ qRules) ->
+                      Just (Proof qHypList goal (pRules++[ImplElim pName hName qName]++qRules))
+      --TODO deal with the rest of the cases
+
+step hypotheses goal@(Implies p q) =
+  let newHypName =  "H"++(show $ (length hypotheses)) in
+    case (generateProof1 (hypotheses++[Hypothesis newHypName p]) q) of
+      Nothing -> Nothing
+      Just (Proof newHyps _ newRules) -> Just (Proof newHyps goal ([ModusPonens newHypName]++newRules))
+
+step _ _ = undefined
+
+contains::Exp->Exp->Bool
+contains a@(Var _) e = a == e
+contains (And a b) e =  (contains a e) || (contains b e)
+contains (Or a b) e =  (contains a e) || (contains b e)
+contains (Implies a b) e =  (contains a e) || (contains b e)
+contains (Not a) e = contains a e
+
+isNotProcessedHyp :: [Hypothesis] -> Hypothesis -> Bool
+isNotProcessedHyp hypList (Hypothesis _ (And p q)) =
+  case (getHypothesisName hypList p, getHypothesisName hypList q) of
+    (Nothing,_) -> True
+    (_,Nothing) -> True
+    (Just _, Just _) -> False
+
+isNotProcessedHyp hypList (Hypothesis _ (Implies p q)) =
+  case (getHypothesisName hypList p, getHypothesisName hypList q) of
+    (Nothing,_) -> True
+    (_,Nothing) -> True
+    (Just _, Just _) -> False
+
+isNotProcessedHyp hypList (Hypothesis _ (Not (Not p))) =
+  case getHypothesisName hypList p of
+    Nothing -> True
+    _ -> False
+
+isNotProcessedHyp hypList (Hypothesis _ (Or _ _)) = True -- TODO Think of this more
+  
+
+-- TODO finish testHyp
+
+
+--------------------------------------------------------------------
+-- end of proof generation
+--------------------------------------------------------------------
+
+testAndIntro :: IO()
+testAndIntro =
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [p,q] (And p q)
+
+testAndIntroTwice :: IO()
+testAndIntroTwice =
+  let p = Var "p" in
+  let q = Var "q" in
+  let r = Var "r" in
+    runTest [p,q,r] (And (And p q) r)
+
+testAndElim :: IO()
+testAndElim =
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [(And p q)] p
+
+testImplElim :: IO()
+testImplElim = 
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [(Implies p q),p] q
+
+testModusPonens :: IO()
+testModusPonens = 
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [q] (Implies p q)
+
+  
 test1 :: IO ()
 test1 = 
   -- p /\ q => r, q => p, q
@@ -244,16 +399,12 @@ test1 =
   let q = Var "q" in
   let r = Var "r" in
   let hypList = [
-        Hypothesis "H1" (Implies (And p q) r),
-        Hypothesis "H2" (Implies q p),
-        Hypothesis "H3" q
+        Implies (And p q) r,
+        Implies q p,
+        q
         ] in
-  let rules = [
-        ImplElim "H3" "H2" "H4",
-          AndIntro "H4" "H3" "H5",
-          ImplElim "H5" "H1" "H6"
-        ]  in
-    runTest hypList r rules
+  let goal = r in
+    runTest hypList goal
 
 test2 :: IO()
 test2 =
@@ -264,133 +415,76 @@ test2 =
   let goal = (Implies
                (Implies p (Implies q r) ) -- (p->(q->r))
                (Implies (Implies p q) (Implies p r))) in -- ( (p->q) -> (p->r) )
-  let rules = [
-        ModusPonens "H1", -- (p->(q->r))
-        ModusPonens "H2", -- p->q
-        ModusPonens "H3", -- p
-        ImplElim "H3" "H2" "H4", -- q
-        ImplElim "H3" "H1" "H5", -- q -> r
-        ImplElim "H4" "H5" "H6" ] in
-    runTest [] goal rules
+    runTest [] goal
 
 test3 :: IO()
 test3 =
-  -- ( (p->q) /\ (q->r) ) -> (p->r)
+  --( (p->q) /\ (q->r) ) -> (p->r)
   let p = Var "p" in
   let q = Var "q" in
   let r = Var "r" in
   let goal = Implies
         (And (Implies p q) (Implies q r))
         (Implies p r) in
-  let rules = [
-        ModusPonens "H1", --H1: (p->q) /\ (q->r); Goal p ->r
-        ModusPonens "H2", --H2: p; Goal r
-        AndElimLeft "H1" "H3", -- H3: q->r
-        AndElimRight "H1" "H4", -- H4: p->q
-        ImplElim "H2" "H4" "H5", -- H5: q
-        ImplElim "H5" "H3" "H6" -- H6:r
-              ] in
-    runTest [] goal rules
+    runTest [] goal
 
 
 test4 :: IO()
 test4 =
-  -- ( (p->q) /\ (r->s) /\ (p \/ r) ) -> (q \/ s)
+  --( (p->q) /\ (r->s) /\ (p \/ r) ) -> (q \/ s)
   let p = Var "p" in
   let q = Var "q" in
   let r = Var "r" in
   let s = Var "s" in
   let goal = (Implies
-               (And (Implies p q ) (And (Implies r s) (Or p r))) -- ( (p->q) /\ (r->s) /\ (p \/ r) )
-               (Or q s)) -- q \/ s
+               (And (Implies p q ) (And (Implies r s) (Or p r))) --( (p->q) /\ (r->s) /\ (p \/ r) )
+               (Or q s)) --q \/ s
   in
-  let rules = [
-        ModusPonens "H1", -- H1: (p->q) /\ (r->s) /\ (p \/ r)  Goal: q \/ s
-        AndElimLeft "H1" "H2", --H2:(r->s) /\ (p \/ r)
-        AndElimRight "H1" "H3", --H3: p->q
-        AndElimLeft "H2" "H4", --H4: p \/ r
-        AndElimRight "H2" "H5", --H5:r->s
-        SubProof (Implies p (Or q s)) -- 
-          [
-            ModusPonens "H7", -- H7:p
-            ImplElim "H7" "H3" "H8", --H8:q
-            OrIntroLeft "H8" s "H9" --H9:q\/s
-          ] "H6", -- H6 p->(q\/s)
-        SubProof (Implies r (Or q s))
-          [
-            ModusPonens "H10", --H10:r
-            ImplElim "H10" "H5" "H11", --H11:s
-            OrIntroRight "H11" q "H14" --H14: q\/s
-          ] "H12", -- H12: r->(q\/s)
-        OrElim "H4" "H6" "H12" "H13" --H13:q\/s
-        ] in
-    runTest [] goal rules
+    runTest [] goal
 
-test5 :: IO()
-test5 =
-  -- ( (p->q) /\ (r->s) /\ (~q \/ ~s) ) -> (~p \/ ~r)
-  let p = Var "p" in
-  let q = Var "q" in
-  let r = Var "r" in
-  let s = Var "s" in
-  let goal = (Implies
-               (And (Implies p q ) (And (Implies r s) (Or (Not q) (Not s)))) -- ( (p->q) /\ (r->s) /\ (~q \/ ~s) )
-               (Or (Not p) (Not r))) -- ~p \/ ~r
-  in
-  let rules = [
-        ModusPonens "H1", -- H1:( (p->q) /\ (r->s) /\ (~q \/ ~s) ) Goal: ~p \/ ~r
-        AndElimRight "H1" "H2", -- H2: p->q
-        AndElimLeft "H1" "H3", -- H3: (r->s) /\ (~q \/ ~s)
-        AndElimRight "H3" "H4", -- H4: r->s
-        AndElimLeft "H3" "H5", -- H5: ~q \/ ~s
-        SubProof (Implies (Not q) (Not p))
-          [
-            ModusPonens "H7", -- H7 ~q
-            NegIntro "H7" "H2" "H8"
-          ] "H6", -- H6: ~q -> ~p
-        SubProof (Implies (Not s) (Not r))
-          [
-            ModusPonens "H9", -- H9 ~s
-            NegIntro "H9" "H4" "H10"
-          ] "H11", -- H11: ~s -> ~r
-        SubProof (Implies (Not q) (Or (Not p) (Not r)))  
-          [
-            ModusPonens "H12", -- H12:~q
-            ImplElim "H12" "H6" "H13", --H13: ~p
-            OrIntroLeft "H13" (Not r) "H20" --H20:~p\/~r
-          ] "H14", -- H14 ~q->(~p\/~r)
-        SubProof (Implies (Not s) (Or (Not p) (Not r)))
-          [
-            ModusPonens "H15", --H15:~s
-            ImplElim "H15" "H11" "H16", --H16:~r
-            OrIntroRight "H16" (Not p) "H17" --H15: ~p\/~r
-          ] "H18", -- H18: ~s->(~p\/~r)
-        OrElim "H5" "H14" "H18" "H19" --H19:~p\/~r
-        ] in
-    runTest [] goal rules
+-- test5 :: IO()
+-- test5 =
+--   -- ( (p->q) /\ (r->s) /\ (~q \/ ~s) ) -> (~p \/ ~r)
+--   let p = Var "p" in
+--   let q = Var "q" in
+--   let r = Var "r" in
+--   let s = Var "s" in
+--   let goal = (Implies
+--                (And (Implies p q ) (And (Implies r s) (Or (Not q) (Not s)))) -- ( (p->q) /\ (r->s) /\ (~q \/ ~s) )
+--                (Or (Not p) (Not r))) -- ~p \/ ~r
+--   in
+--   let rules = generateProof hypList goal  in
+--     runTest [] goal rules
     
 
-runTest:: [Hypothesis] -> Exp -> [Rule] -> IO()
-runTest hypList goal rules = do
+runTest:: [Exp] -> Exp -> IO()
+runTest hypList goal = do
   putStrLn "============================================================================"
-  -- print hypothesis
-  mapM_ (\h -> putStrLn (show h)) hypList
-  putStrLn ("Goal:" ++ (show goal))
-  result <- checkProof (Proof hypList goal rules)
-  case result of
-    Just (Proof hypList goal []) -> do
-      putStrLn "CORRECT proof"
-      mapM_ (\h -> putStrLn (show h)) hypList
-    _ -> putStrLn "Proof FAILED"
-
-          
+  let hypotheses = (buildHypotheses hypList) in do
+    mapM_ (\h -> putStrLn (show h)) hypotheses
+    putStrLn ("Goal:" ++ (show goal))
+    case (generateProof hypotheses goal) of
+      Nothing -> putStrLn "Proof generation failed"
+      Just rules  -> do
+        result <- checkProof (Proof hypotheses goal rules)
+        case result of
+          Just (Proof hypList goal []) -> do
+            putStrLn "CORRECT proof"
+            mapM_ (\h -> putStrLn (show h)) hypList
+          _ -> putStrLn "Proof FAILED"
+            
 main :: IO ()
 main = do
+  testAndIntro
+  testAndIntroTwice
+  testAndElim
+  testImplElim
+  testModusPonens
   test1
   test2
-  test3
-  test4
-  test5
+  -- test3
+  -- test4
+  -- test5
 
 
              
