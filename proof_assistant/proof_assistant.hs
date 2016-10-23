@@ -1,5 +1,6 @@
 import Data.List
 import Control.Monad.State
+import System.IO.Unsafe
 
 data Exp =
   Var String |
@@ -271,10 +272,8 @@ generateProof1 hypotheses goal =
     Just _ -> do return (Just (Proof hypotheses goal []))
     Nothing -> step hypotheses goal
 
-    
-step::[Hypothesis] -> Exp -> State Int (Maybe Proof)
-step hypotheses goal@(And p q) = do
-  -- check if last rule can be andIntro
+tryAddIntro::[Hypothesis] -> Exp -> Exp -> State Int (Maybe Proof)
+tryAddIntro hypotheses p q = do
   result1 <- generateProof1 hypotheses p
   case result1 of
     Nothing -> do return Nothing
@@ -287,46 +286,114 @@ step hypotheses goal@(And p q) = do
           case (getHypothesisName hyp2 p,getHypothesisName hyp2 q) of
             (Just hypStr1, Just hypStr2) -> do
               conclStr <- generateHypothesisName
-              let newHypList = hyp2 ++ [Hypothesis conclStr goal] in
+              let newHypList = hyp2 ++ [Hypothesis conclStr (And p q)] in
                 let newRules = rules1++rules2++[AndIntro hypStr1 hypStr2 conclStr] in
-                  return (Just (Proof newHypList goal newRules))
-                      
-            (_,_) -> do return Nothing
-  -- TODO handle other cases here when the goal is a conjuction
+                  return (Just (Proof newHypList (And p q)  newRules))          
+            (_,_) -> do return Nothing --TODO this is an error
 
+doAndElimination::[Hypothesis]->String->Exp->Exp->Exp->State Int (Maybe Proof)
+doAndElimination hypotheses hName p q goal= do
+  pName <- generateHypothesisName
+  qName <- generateHypothesisName
+  -- create hyp p
+  -- create hyp q
+  -- add AndElimRight && AndElimLeft
+  -- try again to generate proof with same goal
+  result <- generateProof1 (hypotheses++[(Hypothesis pName p),(Hypothesis qName q)]) goal
+  case result of
+    Nothing ->do return Nothing
+    Just (Proof newHyp _ newRules) -> do
+      return( Just (Proof newHyp goal
+                     ([AndElimRight hName pName,
+                        AndElimLeft hName qName]
+                       ++newRules)))
+
+doImplElim :: [Hypothesis] -> String -> Exp -> Exp -> Exp -> State Int (Maybe Proof)
+doImplElim hypotheses hName p q goal = do
+  result1 <- generateProof1 hypotheses p
+  case result1 of
+    Nothing -> return Nothing
+    Just (Proof pHypList _ pRules) ->
+      case (getHypothesisName pHypList p) of
+        Nothing -> return Nothing -- This should not happen TODO Add some error
+        Just pName -> do
+          qName <- generateHypothesisName
+          result2 <- generateProof1 (pHypList++[Hypothesis qName q]) goal
+          case result2 of
+            Nothing ->return Nothing
+            Just (Proof qHypList _ qRules) ->
+              return (Just (Proof qHypList goal (pRules++[ImplElim pName hName qName]++qRules)))
+
+doOrElim :: [Hypothesis] -> String -> Exp -> Exp -> Exp -> State Int (Maybe Proof) 
+doOrElim allHypotheses hName p q goal = do
+  -- have Hypothesis hName p\/q
+  -- look for Hypothesis p->r and q->r
+  return Nothing -- TODO
+
+tryOrIntroLeft :: [Hypothesis] -> Exp -> Exp -> Exp -> State Int (Maybe Proof)
+tryOrIntroLeft hypotheses p q goal= do
+  resultP <- generateProof1 hypotheses p
+  case resultP of
+    Nothing -> return Nothing
+    Just (Proof pHypotheses _ pRules) -> do
+      newHypName <- generateHypothesisName
+      case (getHypothesisName pHypotheses p) of
+        Nothing -> return Nothing -- TODO error
+        Just pName ->
+          return (Just (Proof (pHypotheses++[Hypothesis newHypName (Or p q)])
+                         goal (pRules++[OrIntroLeft pName q newHypName])))
+
+tryOrIntroRight :: [Hypothesis] -> Exp -> Exp -> Exp -> State Int (Maybe Proof)
+tryOrIntroRight hypotheses p q goal= do
+  resultQ <- generateProof1 hypotheses q
+  case resultQ of
+    Nothing -> return Nothing
+    Just (Proof qHypotheses _ qRules) -> do
+      newHypName <- generateHypothesisName
+      case (getHypothesisName qHypotheses q) of
+        Nothing -> return Nothing -- TODO error
+        Just qName ->
+          return (Just (Proof (qHypotheses++[Hypothesis newHypName (Or p q)])
+                         goal (qRules++[OrIntroLeft qName p newHypName])))
+
+tryHypothesis::[Hypothesis]->[Hypothesis]-> Exp ->State Int (Maybe Proof)
+tryHypothesis allHypotheses worklist goal= do
+  case find (\h -> isNotProcessedHyp allHypotheses h) worklist of
+    Nothing -> do return Nothing
+    Just (Hypothesis hName (And p q)) -> 
+      doAndElimination allHypotheses hName p q goal
+    Just (Hypothesis hName (Implies p q)) ->
+      doImplElim allHypotheses hName p q goal
+    Just (Hypothesis hName (Not (Not p))) -> do
+      newHypName <- generateHypothesisName
+      return (Just (Proof (allHypotheses++[Hypothesis newHypName p])
+                    goal [NegElim hName newHypName]))
+    Just (Hypothesis hName (Or p q)) ->
+      doOrElim allHypotheses hName p q goal
+
+
+step::[Hypothesis] -> Exp -> State Int (Maybe Proof)
+step hypotheses goal@(And p q) = do
+  -- check if last rule can be andIntro
+  result <- tryAddIntro hypotheses p q 
+  case result of
+    Just proof -> return (Just proof)
+    Nothing -> do
+      resultH <- tryHypothesis hypotheses hypotheses goal
+      case resultH of
+        Just (Proof hypothesesH _ rulesH) -> do
+          newResult <- generateProof1 hypothesesH goal
+          case newResult of 
+            Nothing -> return Nothing
+            Just (Proof newHyp _ newRules) -> 
+              return (Just (Proof newHyp goal (rulesH++newRules)))
+                              
+  -- TODO handle other cases here when the goal is a conjuction
+  
 step hypotheses goal@(Var name) =
   let pHyp = filter (\(Hypothesis _ expr) ->
                         contains expr goal) hypotheses in
-    case find (\h -> isNotProcessedHyp hypotheses h) pHyp of
-      Nothing -> do return Nothing
-      Just (Hypothesis hName (And p q)) -> do
-        pName <- generateHypothesisName
-        qName <- generateHypothesisName
-        -- create hyp p
-        -- create hyp q
-        -- add AndElimRight && AndElimLeft
-        -- try again to generate proof with same goal
-        result <- generateProof1 (hypotheses++[(Hypothesis pName p),(Hypothesis qName q)]) goal
-        case result of
-          Nothing ->do return Nothing
-          Just (Proof newHyp _ newRules) -> do return( Just (Proof newHyp goal
-                                                    ([AndElimRight hName pName,
-                                                      AndElimLeft hName qName]
-                                                      ++newRules)))
-      Just (Hypothesis hName (Implies p q)) -> do
-        result1 <- generateProof1 hypotheses p
-        case result1 of
-          Nothing -> return Nothing
-          Just (Proof pHypList _ pRules) ->
-            case (getHypothesisName pHypList p) of
-              Nothing -> return Nothing -- This should not happen TODO Add some error
-              Just pName -> do
-                qName <- generateHypothesisName
-                result2 <- generateProof1 (pHypList++[Hypothesis qName q]) goal
-                case result2 of
-                  Nothing ->return Nothing
-                  Just (Proof qHypList _ qRules) ->
-                      return (Just (Proof qHypList goal (pRules++[ImplElim pName hName qName]++qRules)))
+      tryHypothesis hypotheses pHyp goal  
       --TODO deal with the rest of the cases
 
 step hypotheses goal@(Implies p q) = do
@@ -336,13 +403,34 @@ step hypotheses goal@(Implies p q) = do
     Nothing -> return Nothing
     Just (Proof newHyps _ newRules) -> return (Just (Proof newHyps goal ([ModusPonens newHypName]++newRules)))
 
+step hypotheses goal@(Or p q) = do
+  resultP <- tryOrIntroLeft hypotheses p q goal
+  case resultP of
+    Just proof -> do return (Just proof)
+    Nothing -> do
+      resultQ <- tryOrIntroRight hypotheses p q goal
+      case resultQ of
+        Just proof -> return (Just proof)
+        Nothing -> do
+          resultH <- tryHypothesis hypotheses hypotheses goal
+          case resultH of
+            Nothing -> return Nothing
+            Just (Proof hypothesesH _ rulesH) -> do
+              newResult <- generateProof1 hypothesesH goal -- TODO check this code
+              case newResult of 
+                Nothing -> return Nothing
+                Just (Proof newHyp _ newRules) -> 
+                  return (Just (Proof newHyp goal (rulesH++newRules)))
+      
+
 step _ _ = undefined
 
 contains::Exp->Exp->Bool
 contains a@(Var _) e = a == e
 contains (And a b) e =  (contains a e) || (contains b e)
 contains (Or a b) e =  (contains a e) || (contains b e)
-contains (Implies a b) e =  (contains a e) || (contains b e)
+contains (Implies a b) e = contains b e
+  --(contains a e) || (contains b e)
 contains (Not a) e = contains a e
 
 isNotProcessedHyp :: [Hypothesis] -> Hypothesis -> Bool
@@ -404,7 +492,25 @@ testModusPonens =
   let q = Var "q" in
     runTest [q] (Implies p q)
 
-  
+testOrIntroLeft :: IO ()
+testOrIntroLeft = 
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [p] (Or p q)
+
+testOrIntroRight :: IO ()
+testOrIntroRight = 
+  let p = Var "p" in
+  let q = Var "q" in
+    runTest [p] (Or p q)
+
+test6 :: IO ()
+test6 = 
+  let p = Var "p" in
+  let q = Var "q" in
+  let r = Var "r" in
+    runTest [And (Or p q) r] (Or p q)
+    
 test1 :: IO ()
 test1 = 
   -- p /\ q => r, q => p, q
@@ -489,15 +595,18 @@ runTest hypList goal = do
             
 main :: IO ()
 main = do
-  testAndIntro
-  testAndIntroTwice
-  testAndElim
-  testImplElim
-  testModusPonens
-  test1
-  test2
+  -- testAndIntro
+  -- testAndIntroTwice
+  -- testAndElim
+  -- testImplElim
+  -- testModusPonens
+  -- test1
+  -- test2
+  -- testOrIntroLeft
+  -- testOrIntroRight
+  -- test6
   -- test3
-  -- test4
+  test4
   -- test5
 
 
