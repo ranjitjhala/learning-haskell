@@ -1,7 +1,7 @@
 import Data.Vector
 
 vectorSum         :: Vector Int -> Int
-vectorSum vec     = go 0 5
+vectorSum vec     = go 0 0
   where
     go acc i
       | i < sz    = go (acc + (vec ! i)) (i + 1)
