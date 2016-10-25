@@ -3,6 +3,7 @@ import Data.Vector
 vectorSum         :: Vector Int -> Int
 vectorSum vec     = go 0 0
   where
+    {-@ go :: _ -> i:_ -> _ / [sz - i] @-} 
     go acc i
       | i < sz    = go (acc + (vec ! i)) (i + 1)
       | otherwise = acc
